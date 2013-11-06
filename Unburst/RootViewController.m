@@ -103,7 +103,7 @@
         [_assets removeAllObjects];
         if ([_assetsGroup numberOfAssets]) {
             ALAssetsGroupEnumerationResultsBlock enumerationBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
-                if (asset && [asset.defaultRepresentation unburst_hasBurstInfo]) {
+                if (asset) {
                     [_assets addObject:asset];
                 }
             };
@@ -161,6 +161,7 @@
 }
 
 #define kImageViewTag 1 // the image view inside the collection view cell prototype is tagged with "1"
+#define kBurstIndicator 2 // the burst indicator label inside collection view cell prototype is tagged with "2"
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -176,6 +177,8 @@
     // apply the image to the cell
     UIImageView *imageView = (UIImageView *)[cell viewWithTag:kImageViewTag];
     imageView.image = thumbnail;
+    UILabel *burstIndicator = (UILabel*)[cell viewWithTag:kBurstIndicator];
+    burstIndicator.hidden = !asset.defaultRepresentation.unburst_hasBurstInfo;
 
     return cell;
 }
