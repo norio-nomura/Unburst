@@ -5,13 +5,14 @@
 
 @import AssetsLibrary;
 @import QuickLook;
+@import ImageIO;
 
 #import "RootViewController.h"
 #import "ALAssetRepresentation+Unburst.h"
 #import "PreviewItem.h"
 #import "FooterView.h"
 
-@interface RootViewController () <QLPreviewControllerDataSource, QLPreviewControllerDelegate, PreviewItemDelegate>
+@interface RootViewController () <QLPreviewControllerDataSource, QLPreviewControllerDelegate, PreviewItemDelegate, UIActionSheetDelegate>
 
 @property (strong, nonatomic) IBOutlet UIView *backgroundView;
 @property (strong, nonatomic) IBOutlet UILabel *centerLabel;
@@ -22,6 +23,8 @@
 @property (strong, nonatomic) ALAssetsGroup *assetsGroup;
 @property (strong, nonatomic) NSMutableArray *assets;
 @property (strong, nonatomic) NSMutableDictionary *previewItems;
+
+@property (strong, nonatomic) ALAsset *gestureTarget;
 
 @end
 
@@ -244,6 +247,97 @@
             [_previewController refreshCurrentPreviewItem];
         }
     });
+}
+
+#pragma mark - GestureRecognizer
+
+- (IBAction)handleLongPress:(UILongPressGestureRecognizer *)sender
+{
+    if (!_gestureTarget) {
+        NSIndexPath *index = [self.collectionView indexPathForItemAtPoint:[sender locationInView:self.collectionView]];
+        if (index) {
+            _gestureTarget = _assets[index.row];
+            // ask method
+            UIActionSheet *actionSheet = [[UIActionSheet alloc]initWithTitle:
+                                          NSLocalizedString(@"Choose method to writing", @"Choose Writing method")
+                                                                    delegate:self
+                                                           cancelButtonTitle:nil
+                                                      destructiveButtonTitle:nil
+                                                           otherButtonTitles:
+                                          NSLocalizedString(@"ALAssetsLibrary", @"Write with ALAssetsLibrary"),
+                                          NSLocalizedString(@"ALAsset",@"Write with ALAsset"), nil];
+            [actionSheet showInView:self.collectionView];
+        }
+    }
+}
+
+#pragma mark - UIActionSheetDelegate
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    static UIActionSheet *chooseMetadataSheet = nil;
+    static BOOL writeWithALAssetsLibrary;
+    if (actionSheet != chooseMetadataSheet) {
+        // save the method of choice
+        writeWithALAssetsLibrary = buttonIndex == [actionSheet firstOtherButtonIndex];
+        // ask metadata
+        chooseMetadataSheet = [[UIActionSheet alloc]initWithTitle:
+                               NSLocalizedString(@"Write to camera roll", @"Write to camera roll")
+                                                         delegate:self
+                                                cancelButtonTitle:
+                               NSLocalizedString(@"Cancel", @"Cancel writing")
+                                           destructiveButtonTitle:
+                               NSLocalizedString(@"With metadata", @"Write with metadata")
+                                                otherButtonTitles:
+                               NSLocalizedString(@"With modified metadata", @"Write with modified metadata"),
+                               NSLocalizedString(@"Without metadata",@"Write without metadata"), nil];
+        [chooseMetadataSheet showInView:self.collectionView];
+    } else {
+        ALAsset *targetAsset = _gestureTarget;
+        _gestureTarget = nil;
+        chooseMetadataSheet = nil;
+        __block NSDictionary *metadata = nil;
+        NSString *metadataChoice = nil;
+        if (buttonIndex == [actionSheet cancelButtonIndex]) {
+            // Cancel
+            return;
+        } else if (buttonIndex == [actionSheet destructiveButtonIndex]) {
+            // With metadata
+            metadata = targetAsset.defaultRepresentation.metadata;
+            metadataChoice = @"[original]";
+        } else if (buttonIndex == [actionSheet firstOtherButtonIndex]) {
+            // With modified metadata
+            metadata = targetAsset.defaultRepresentation.unburst_getUnburstedMetadata;
+            metadataChoice = @"[unbursted]";
+        } else {
+            // Without metadata
+            metadataChoice = @"[none]";
+        }
+
+        __block NSMutableData *data = [NSMutableData data];
+        CFStringRef uti = (__bridge CFStringRef)targetAsset.defaultRepresentation.UTI;
+        CGImageDestinationRef dest = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)(data), uti, 1, NULL);
+        CGImageRef image = targetAsset.defaultRepresentation.fullResolutionImage;
+        CGImageDestinationAddImage(dest, image, (__bridge CFDictionaryRef)(metadata));
+        CGImageDestinationFinalize(dest);
+        CFRelease(dest);
+
+        NSString *methodName = writeWithALAssetsLibrary ? @"ALAssetsLibrary writeImageDataToSavedPhotosAlbum:~" : @"ALAsset writeModifiedImageDataToSavedPhotosAlbum:~";
+        ALAssetsLibraryWriteImageCompletionBlock completionBlock = ^(NSURL *assetURL, NSError *error) {
+            if (error) {
+                NSLog(@"error: %@", error);
+            }
+            NSLog(@"complete -[%@ metadata:%@ complete:~] assetURL: %@", methodName, metadataChoice, assetURL);
+            data = nil; // instead of release
+            metadata = nil; // instead of release
+        };
+        NSLog(@"call -[%@ metadata:%@ complete:~]", methodName, metadataChoice);
+        if (writeWithALAssetsLibrary) {
+            [_assetsLibrary writeImageDataToSavedPhotosAlbum:data metadata:metadata completionBlock:completionBlock];
+        } else {
+            [targetAsset writeModifiedImageDataToSavedPhotosAlbum:data metadata:metadata completionBlock:completionBlock];
+        }
+    }
 }
 
 @end

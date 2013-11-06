@@ -30,6 +30,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="2" minimumInteritemSpacing="2" id="aY2-IJ-DVZ">
                             <size key="itemSize" width="78.5" height="78.5"/>
                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -106,6 +107,7 @@
                         <connections>
                             <outlet property="dataSource" destination="ksT-f9-jZJ" id="0hd-pH-pdJ"/>
                             <outlet property="delegate" destination="ksT-f9-jZJ" id="hv0-gT-anN"/>
+                            <outletCollection property="gestureRecognizers" destination="zbT-cX-6i0" appends="YES" id="MVz-Oa-bAn"/>
                         </connections>
                     </collectionView>
                     <navigationItem key="navigationItem" id="Aem-DG-5cM"/>
@@ -115,6 +117,11 @@
                     </connections>
                 </collectionViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="OdP-GC-ILY" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <pongPressGestureRecognizer allowableMovement="10" minimumPressDuration="0.5" id="zbT-cX-6i0">
+                    <connections>
+                        <action selector="handleLongPress:" destination="ksT-f9-jZJ" id="Mb0-gY-z4G"/>
+                    </connections>
+                </pongPressGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="875" y="109"/>
         </scene>
