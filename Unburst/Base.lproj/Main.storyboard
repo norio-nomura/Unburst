@@ -58,14 +58,14 @@
                         </view>
                         <cells>
                             <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="Cell" reuseIdentifier="Cell" id="33r-G8-Hrj">
-                                <rect key="frame" x="0.0" y="64" width="79" height="79"/>
+                                <rect key="frame" x="0.0" y="64" width="78.5" height="78.5"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
                                     <rect key="frame" x="0.0" y="0.0" width="79" height="79"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" restorationIdentifier="ImageView" translatesAutoresizingMaskIntoConstraints="NO" id="dit-7D-VjQ">
-                                            <rect key="frame" x="0.0" y="0.0" width="73" height="73"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="78" height="78"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         </imageView>
                                     </subviews>
