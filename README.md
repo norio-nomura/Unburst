@@ -1,3 +1,16 @@
+Unburst ReproduceIssue branch
+-----------------------------
+iPhone 5s burst mode embed burst mode specific metadata. it cause problems with below APIs at least.
+
+	-[ALAssetsLibrary writeImageDataToSavedPhotosAlbum:metadata:completionBlock:]
+	-[ALAsset writeModifiedImageDataToSavedPhotosAlbum:metadata:completionBlock:]
+
+These APIs fail without calling completion block if `metadata[@"{MakerApple}"][@"11"]` exists.
+
+These results has been tested on iPhone 5s with iOS 7.0.3 (11B511). 2013/11/06.
+
+Maybe other `AssetsLibrary.framework` API which taking metadata as parameter will fail, but I did not test them.
+
 Unburst
 -------
 iOS Camera sets Apple specific dictionary for key`{MakerApple}` into the metadata of photo.
