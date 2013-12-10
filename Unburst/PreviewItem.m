@@ -52,6 +52,21 @@
     return self;
 }
 
+- (void)update;
+{
+    __weak typeof(self) weakSelf = self;
+    __block ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
+    ALAssetsLibraryAssetForURLResultBlock resultBlock = ^(ALAsset *asset){
+        __strong typeof (weakSelf) strongSelf = weakSelf;
+        [strongSelf generateUnburstImageWithAsset:asset];
+        assetsLibrary = nil;
+    };
+    ALAssetsLibraryAccessFailureBlock failureBlock = ^(NSError *error){
+        NSLog(@"assetForURL:resultBlock:failureBlock: %@",error);
+    };
+    [assetsLibrary assetForURL:_assetURL resultBlock:resultBlock failureBlock:failureBlock];
+}
+
 /*!
  *  Generate Unbursted Image as [UUID].JPG into NSTemporaryDirectory()
  */

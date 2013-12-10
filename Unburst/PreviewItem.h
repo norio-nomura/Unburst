@@ -38,6 +38,12 @@
  */
 + (instancetype)previewItemWithDelegate:(id<PreviewItemDelegate>)delegate forAsset:(ALAsset*)asset;
 
+/*!
+ *  Update
+ *  previewItemURL will be re-generate.
+ */
+- (void)update;
+
 @end
 
 @protocol PreviewItemDelegate <NSObject>
