@@ -145,6 +145,13 @@
     NSArray *updatedAssetGroups = note.userInfo[ALAssetLibraryUpdatedAssetGroupsKey];
     if ([updatedAssetGroups containsObject:[_assetsGroup valueForProperty:ALAssetsGroupPropertyURL]]){
         [self loadAssets];
+    } else if (note.userInfo[ALAssetLibraryUpdatedAssetsKey]) {
+        // If updatedAssets exists, update those previewItems.
+        NSSet *updatedAssets = note.userInfo[ALAssetLibraryUpdatedAssetsKey];
+        for (NSURL *url in updatedAssets) {
+            PreviewItem *previewItem = _previewItems[url];
+            [previewItem update];
+        }
     }
 }
 
