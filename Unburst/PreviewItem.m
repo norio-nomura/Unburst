@@ -65,15 +65,19 @@
         // limit max concurrent operation by semaphore
         semaphore = dispatch_semaphore_create(3);
     });
+    
+    ALAssetRepresentation *representation = asset.defaultRepresentation;
+    CFStringRef uti = (__bridge CFStringRef)representation.UTI;
+    CGImageRef fullResolutionImage = representation.fullResolutionImage;
+    NSDictionary *unburstedMetadata = representation.unburst_getUnburstedMetadata;
+    
     dispatch_async(concurrentQueue, ^{
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         
         NSArray *tempComponents = @[NSTemporaryDirectory(), [[[NSUUID UUID]UUIDString]stringByAppendingPathExtension:@"JPG"]];
         NSURL *tempURL = [NSURL fileURLWithPathComponents:tempComponents];
-        CFStringRef uti = (__bridge CFStringRef)asset.defaultRepresentation.UTI;
         CGImageDestinationRef dest = CGImageDestinationCreateWithURL((__bridge CFURLRef)tempURL, uti, 1, NULL);
-        CFDictionaryRef unburstedMetadata = (__bridge CFDictionaryRef)asset.defaultRepresentation.unburst_getUnburstedMetadata;
-        CGImageDestinationAddImage(dest, asset.defaultRepresentation.fullResolutionImage, unburstedMetadata);
+        CGImageDestinationAddImage(dest, fullResolutionImage, (__bridge CFDictionaryRef)(unburstedMetadata));
         CGImageDestinationFinalize(dest);
         CFRelease(dest);
         
