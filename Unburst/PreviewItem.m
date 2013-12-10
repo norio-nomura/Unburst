@@ -77,7 +77,32 @@
         NSArray *tempComponents = @[NSTemporaryDirectory(), [[[NSUUID UUID]UUIDString]stringByAppendingPathExtension:@"JPG"]];
         NSURL *tempURL = [NSURL fileURLWithPathComponents:tempComponents];
         CGImageDestinationRef dest = CGImageDestinationCreateWithURL((__bridge CFURLRef)tempURL, uti, 1, NULL);
-        CGImageDestinationAddImage(dest, fullResolutionImage, (__bridge CFDictionaryRef)(unburstedMetadata));
+        // Check metadata contains AdjustmentXMP
+        static NSString *kAdjustmentXMP = @"AdjustmentXMP";
+        NSString *XMPString = unburstedMetadata[kAdjustmentXMP];
+        if (XMPString) {
+            CIImage *image = [CIImage imageWithCGImage:fullResolutionImage];
+            NSData *XMP = [XMPString dataUsingEncoding:NSUTF8StringEncoding];
+            NSError *error = nil;
+            NSArray *filters = [CIFilter filterArrayFromSerializedXMP:XMP inputImageExtent:image.extent error:&error];
+            if (error) {
+                NSLog(@"CIFilter filterArrayFromSerializedXMP:inputImageExtent:error: %@",error);
+            }
+            for (CIFilter *filter in filters) {
+                [filter setValue:image forKey:kCIInputImageKey];
+                image = filter.outputImage;
+            }
+            CIContext *context = [CIContext contextWithOptions:nil];
+            CGImageRef filteredImage = [context createCGImage:image fromRect:image.extent];
+            NSMutableDictionary *metadata = [unburstedMetadata mutableCopy];
+            [metadata removeObjectForKey:kAdjustmentXMP];
+            
+            CGImageDestinationAddImage(dest, filteredImage, (__bridge CFDictionaryRef)(metadata));
+            
+            CFRelease(filteredImage);
+        } else {
+            CGImageDestinationAddImage(dest, fullResolutionImage, (__bridge CFDictionaryRef)(unburstedMetadata));
+        }
         CGImageDestinationFinalize(dest);
         CFRelease(dest);
         
