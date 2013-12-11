@@ -82,8 +82,8 @@
     });
     
     ALAssetRepresentation *representation = asset.defaultRepresentation;
-    CFStringRef uti = (__bridge CFStringRef)representation.UTI;
-    CGImageRef fullResolutionImage = representation.fullResolutionImage;
+    NSString *uti = representation.UTI;
+    CGImageRef fullResolutionImage = CGImageRetain(representation.fullResolutionImage);
     NSDictionary *unburstedMetadata = representation.unburst_getUnburstedMetadata;
     
     dispatch_async(concurrentQueue, ^{
@@ -91,7 +91,7 @@
         
         NSArray *tempComponents = @[NSTemporaryDirectory(), [[[NSUUID UUID]UUIDString]stringByAppendingPathExtension:@"JPG"]];
         NSURL *tempURL = [NSURL fileURLWithPathComponents:tempComponents];
-        CGImageDestinationRef dest = CGImageDestinationCreateWithURL((__bridge CFURLRef)tempURL, uti, 1, NULL);
+        CGImageDestinationRef dest = CGImageDestinationCreateWithURL((__bridge CFURLRef)tempURL, (__bridge CFStringRef)(uti), 1, NULL);
         // Check metadata contains AdjustmentXMP
         static NSString *kAdjustmentXMP = @"AdjustmentXMP";
         NSString *XMPString = unburstedMetadata[kAdjustmentXMP];
@@ -120,6 +120,7 @@
         }
         CGImageDestinationFinalize(dest);
         CFRelease(dest);
+        CGImageRelease(fullResolutionImage);
         
         dispatch_semaphore_signal(semaphore);
         
